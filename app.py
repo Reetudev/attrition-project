@@ -1,41 +1,30 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
-# Load dataset
-df = sns.load_dataset('titanic')
-df['Attrition'] = df['survived']
-df = df.drop(['survived'], axis=1)
-df = df.dropna()
+# Simple dataset
+data = {
+    'Age': [25, 30, 45, 35, 22, 40],
+    'Salary': [30000, 40000, 80000, 50000, 20000, 90000],
+    'Attrition': [0, 0, 1, 0, 1, 1]
+}
 
-# Convert categorical
-df = pd.get_dummies(df)
+df = pd.DataFrame(data)
 
-# Split
-X = df.drop('Attrition', axis=1)
+X = df[['Age', 'Salary']]
 y = df['Attrition']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-# Train model
 model = RandomForestClassifier()
-model.fit(X_train, y_train)
+model.fit(X, y)
 
-# UI
 st.title("Employee Attrition Prediction System")
 
-st.sidebar.header("Enter Details")
-age = st.sidebar.slider("Age", 18, 60, 25)
-fare = st.sidebar.slider("Salary", 10, 500, 100)
+age = st.slider("Age", 18, 60, 25)
+salary = st.slider("Salary", 10000, 100000, 30000)
 
-input_data = X_test.iloc[0:1].copy()
-input_data[:] = 0
-input_data['age'] = age
-input_data['fare'] = fare
+input_data = pd.DataFrame([[age, salary]], columns=['Age', 'Salary'])
 
-prediction = model.predict(input_data)
+prediction = model.predict(input_data)[0]
 prob = model.predict_proba(input_data)[0][1]
 
 if prob < 0.3:
@@ -45,9 +34,7 @@ elif prob < 0.6:
 else:
     risk = "High Risk"
 
-st.subheader("Result")
-st.write("Prediction:", "Will Leave" if prediction[0]==1 else "Will Stay")
+st.write("Prediction:", "Will Leave" if prediction == 1 else "Will Stay")
 st.write("Probability:", prob)
 st.write("Risk Level:", risk)
 
-st.bar_chart(df['Attrition'].value_counts())
